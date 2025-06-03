@@ -1,0 +1,190 @@
+{
+  "name": "sample neo4j",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "On clicking 'execute'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -220,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "55ac1819-6ef3-485d-8494-662b0259222d"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6023757e-fba7-4878-a90d-44e16a39aabf",
+              "name": "",
+              "value": "=[\n  {\n    \"name\": \"CEO\",\n    \"children\": [\n      {\n        \"name\": \"CTO\",\n        \"children\": [\n          {\n            \"name\": \"Dev1\",\n            \"children\": []\n          },\n          {\n            \"name\": \"Dev2\",\n            \"children\": []\n          }\n        ]\n      },\n      {\n        \"name\": \"CFO\",\n        \"children\": []\n      }\n    ]\n  },\n  {\n    \"name\": \"CLIENT\",\n    \"children\": [\n      \n    ]\n  }\n]\n",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "05b5f152-559f-4561-bc6f-1f39d983e3fd",
+      "name": "Edit Fields",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "graphDb",
+        "cypherQuery": "={{ $json.query }}"
+      },
+      "type": "n8n-nodes-neo4j.neo4j",
+      "typeVersion": 1,
+      "position": [
+        920,
+        60
+      ],
+      "id": "51fc9877-1429-48f1-9d85-a413d6bbc92b",
+      "name": "Neo4j",
+      "alwaysOutputData": true,
+      "credentials": {
+        "neo4jApi": {
+          "id": "2uncoMBW2VxsT759",
+          "name": "Neo4j account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "graphDb",
+        "cypherQuery": "MATCH (n) DETACH DELETE n"
+      },
+      "type": "n8n-nodes-neo4j.neo4j",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e2c8cb6d-c161-465a-98d7-2ad2f2edd36d",
+      "name": "Neo4j1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "neo4jApi": {
+          "id": "2uncoMBW2VxsT759",
+          "name": "Neo4j account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.item.json[\"\"];\n\nconst queries = [];\n\nfunction buildCypher(node, parent = null) {\n  let q = [`MERGE (:Person {name: \"${node.name}\"})`];\n  if (parent) {\n    q.push(`MATCH (p1:Person {name: \"${parent}\"}), (p2:Person {name: \"${node.name}\"}) MERGE (p1)-[:MANAGES]->(p2)`);\n  }\n  if (node.children) {\n    for (const child of node.children) {\n      q = q.concat(buildCypher(child, node.name));\n    }\n  }\n  return q;\n}\nfor (const item of allItems) {\n  queries.push(...buildCypher(item));\n}\n\nreturn queries.map(query => ({ json: { query } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "afd9f998-c4b0-42d9-b793-170dbe0b611d",
+      "name": "Code",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        660,
+        0
+      ],
+      "id": "e892edc1-4cca-4c16-b13b-05a17a793350",
+      "name": "Loop Over Items"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "Neo4j1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neo4j1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neo4j": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Neo4j",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1ce6db47-a18f-4f6f-b772-4f0ac2db712e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0ad7531ab232104ed58b7d2400870f617103d4351d04f25540e2146bfcfb32b2"
+  },
+  "id": "GuwNl5SuDSg6WuSe",
+  "tags": []
+}

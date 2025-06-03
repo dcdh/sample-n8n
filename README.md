@@ -50,9 +50,12 @@ http://localhost:5678/settings/community-nodes
 
 # neo4j
 
-- Connection URI: neo4j+s://host.docker.internal:7687
+- Connection URI: bolt://host.docker.internal:7687
 - Username: neo4j
-- Password: neo4j
+- Password: neo4j damien1983
 
 Create relationship not implemented ! https://github.com/Kurea/n8n-nodes-neo4j/blob/main/src/nodes/Neo4j/Neo4j.node.ts#L370
 
+https://neo4j.com/docs/operations-manual/current/docker/ref-settings/
+
+MATCH (n) DETACH DELETE n
